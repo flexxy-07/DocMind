@@ -27,6 +27,15 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Test files and Media (bluff/temp testing files)
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.tiff
+*.bmp
+
 # VS Code
 .vscode/
 
