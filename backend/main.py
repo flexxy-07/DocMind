@@ -1,3 +1,4 @@
+from models.schemas import HealthResponse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -7,7 +8,7 @@ load_dotenv()
 
 app = FastAPI(
   title = 'DocMind API',
-  description = 'API for DocMind, a document analysis and question-answering system.',
+  description = 'RAG-powered document intelligence backend',
   version = os.getenv('API_VERSION', '1.0.0')
   
 )
@@ -35,10 +36,13 @@ def root():
       'version': os.getenv('API_VERSION', 'unknown')
     }
 
-@app.get('/health')
+@app.get('/health', response_model = HealthResponse)
 def health():
     # render pings this URL to know the app is alive
-    return {
-      'status' : 'ok',
-      'version': os.getenv('API_VERSION', '1.0.0')
-    }
+    return HealthResponse(
+        status = 'ok',
+        version = os.getenv('API_VERSION', '1.0.0'),
+        services = {
+            
+        }
+    )
