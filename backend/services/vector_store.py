@@ -23,10 +23,13 @@ TOP_K = int(os.getenv('TOP_K', 5))
 
 _client: QdrantClient | None = None
 
+import time
+
 def get_client() -> QdrantClient:
   """
   Returns the Qdrant client, creating it if needed.
   Also ensures our collection exists (created it if not).
+  Includes a retry mechanism for sporadic DNS errors.
   """
   global _client
   if _client is None:
@@ -35,8 +38,19 @@ def get_client() -> QdrantClient:
       api_key=QDRANT_API_KEY
     )
     
-    # Check if collection exists, if not create it
-    _ensure_collection(_client)
+    # Retry mechanism for sporadic getaddrinfo errors
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            # Check if collection exists, if not create it
+            _ensure_collection(_client)
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"Qdrant connection failed, retrying in 2s (Attempt {attempt+1}/{max_retries})...")
+                time.sleep(2)
+            else:
+                raise e
       
   return _client
 
