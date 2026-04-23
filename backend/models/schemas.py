@@ -43,6 +43,7 @@ class QueryRequest(BaseModel):
     
     # doc_id is Optional - if None, we search across ALL docs, and if provided, we only search within that specific document
     doc_id : Optional[str] = None
+    doc_ids : Optional[List[str]] = []
     
     # the last few messages so the LLM remebers context
     # eg. : [{'role' : 'user', 'content' : '...'}]
