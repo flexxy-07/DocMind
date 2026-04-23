@@ -1,10 +1,11 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from models.schemas import HealthResponse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from routers import ingest
 
 app = FastAPI(
   title = 'DocMind API',
@@ -26,6 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(ingest.router)
+
 # Routes
 @app.get('/')
 def root():
@@ -46,3 +49,10 @@ def health():
             
         }
     )
+    
+@app.on_event("startup")
+async def startup():
+    # preload the model so first requrest is not slow
+    from services.embedder import get_model
+    get_model()
+    print("DocMind API is ready ✓")
