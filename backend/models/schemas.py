@@ -43,12 +43,12 @@ class QueryRequest(BaseModel):
     
     # doc_id is Optional - if None, we search across ALL docs, and if provided, we only search within that specific document
     doc_id : Optional[str] = None
-    doc_ids : Optional[List[str]] = []
+    doc_ids : Optional[List[str]] = Field(default_factory=list)
     
     # the last few messages so the LLM remebers context
     # eg. : [{'role' : 'user', 'content' : '...'}]
     
-    conversation_history: Optional[List[dict]] = []
+    conversation_history: Optional[List[dict]] = Field(default_factory=list)
     
 class SourceChunk(BaseModel):
   """
@@ -96,7 +96,7 @@ class ChatMessage(BaseModel):
     """
     role: str                               # "user" or "assistant"
     content: str
-    sources: Optional[List[SourceChunk]] = []
+    sources: Optional[List[SourceChunk]] = Field(default_factory=list)
     timestamp: str
   
 class SessionRecord(BaseModel):
@@ -108,7 +108,7 @@ class SessionRecord(BaseModel):
   doc_id : Optional[str] = None # None = multi doc session
   doc_ids : Optional[List[str]] = None # for multi doc sessions
   messages : List[ChatMessage]
-  createdAt : str
+  created_at : str
   
 
 # System Schemas

@@ -18,7 +18,7 @@ from typing import Tuple
 
 
 def extract_text_from_pdf(file_bytes: bytes) -> Tuple[str, int, bool]:
-  """"
+  """
   Opens a PDF and extracts text page by page.
   
   for each page:
@@ -106,7 +106,7 @@ def extract_from_text(file_bytes : bytes) -> Tuple[str, int, bool]:
   
   
 def parse_document(file_bytes: bytes, filename: str) -> Tuple[str, int, bool]:
-  """"
+  """
   MAIN ENRY POINT -> called from the ingest router
   
   Looks at the file extension and routes to the right extracter .

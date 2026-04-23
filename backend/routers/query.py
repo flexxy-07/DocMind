@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 import json
+import urllib.request
 
 from models.schemas import QueryRequest, QueryResponse, SourceChunk
 
@@ -16,7 +17,7 @@ router = APIRouter(
     tags=['query']
 )
 
-async def _retrieve(req: QueryResponse) -> tuple:
+async def _retrieve(req: QueryRequest) -> tuple:
   """
   Shared retrieval logic for both single-doc and multi-doc queries.
   if -> doc_id provided : single doc query, if doc_ids provided OR no doc_id -> multi-doc query
@@ -25,27 +26,32 @@ async def _retrieve(req: QueryResponse) -> tuple:
   doc_id = req.doc_id
   doc_ids = getattr(req, 'doc_ids', None)
   
-  query_vector = embed_query(req.question)
-  
-  raw_chunks = search_chunks(
-        query_vector=query_vector,
-        doc_id=doc_id,      
-        doc_ids=doc_ids,    
-    )
-  
-  if not raw_chunks:
-    raise HTTPException(status_code=404, detail="No relevant chunks found for the query.")
-  
   category = 'general'
   is_image_doc = False
-  
+  doc_record = None
+
   if doc_id:
     doc_record = get_doc_record(doc_id)
-    if doc_record:
-      category = doc_record.get('category', 'general')
-      is_image_doc = doc_record.get('is_image_doc', False)
-      
-  return raw_chunks, category, is_image_doc
+    if not doc_record:
+      raise HTTPException(status_code=404, detail=f"Document '{doc_id}' not found")
+    category = doc_record.get('category', 'general')
+    is_image_doc = doc_record.get('is_image_doc', False)
+
+  if is_image_doc:
+    return [], category, True, doc_record
+
+  query_vector = embed_query(req.question)
+
+  raw_chunks = search_chunks(
+    query_vector=query_vector,
+    doc_id=doc_id,
+    doc_ids=doc_ids,
+  )
+
+  if not raw_chunks:
+    raise HTTPException(status_code=404, detail="No relevant chunks found for the query.")
+
+  return raw_chunks, category, False, doc_record
 
 def _format_sources(raw_chunks: list) -> list[SourceChunk]:
   """
@@ -68,8 +74,32 @@ def _format_sources(raw_chunks: list) -> list[SourceChunk]:
 
 
 @router.post("/", response_model=QueryResponse)
-async def query(req: QueryResponse):
-  raw_chunks, category, is_image_doc = await _retrieve(req)
+async def query(req: QueryRequest):
+  raw_chunks, category, is_image_doc, doc_record = await _retrieve(req)
+
+  if is_image_doc:
+    storage_url = doc_record.get('storage_url') if doc_record else None
+    if not storage_url:
+      raise HTTPException(status_code=404, detail="Image document URL not found.")
+
+    try:
+      with urllib.request.urlopen(storage_url) as response:
+        image_bytes = response.read()
+    except Exception as e:
+      raise HTTPException(status_code=500, detail=f"Failed to fetch image document: {str(e)}")
+
+    answer = answer_image_doc(
+      question=req.question,
+      image_bytes=image_bytes,
+      category=category,
+    )
+
+    return QueryResponse(
+      answer=answer,
+      sources=[],
+      doc_category=category,
+      model_used='gemini-2.5-flash',
+    )
   
   answer = answer_question(
     question=req.question,
@@ -91,7 +121,13 @@ async def query(req: QueryResponse):
   
 @router.post("/stream")
 async def query_stream(req: QueryRequest):
-  raw_chunks, category, is_image_doc = await _retrieve(req)
+  raw_chunks, category, is_image_doc, _ = await _retrieve(req)
+
+  if is_image_doc:
+    raise HTTPException(
+      status_code=400,
+      detail="Streaming is not supported for image-only documents. Use /query instead."
+    )
   
   sources_payload = [
     {
@@ -148,7 +184,7 @@ async def query_stream(req: QueryRequest):
   # POST /query/ multi
   
 @router.post("/multi")
-async def query_multi(req: QueryResponse):
+async def query_multi(req: QueryRequest):
    """
    Ask a question across multiple documents. The request can include either a list of doc_ids or no doc_id at all (which means search across all docs).
     
@@ -192,5 +228,6 @@ async def query_multi(req: QueryResponse):
      'sources': _format_sources(raw_chunks),
      'sources_by_doc': sources_by_doc,
      'doc_count': len(sources_by_doc),
-     'total_chunks': 'gemini-2.5-flash',     
-   }   
+     'total_chunks': len(raw_chunks),
+     'model_used': 'gemini-2.5-flash',
+   }

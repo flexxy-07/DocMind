@@ -75,7 +75,7 @@ def delete_document(doc_id: str):
   delete_sessions_for_doc(doc_id)
   
   return {
-    'message' : f"Document '{filename} deleted successfully..'",
+    'message' : f"Document '{filename}' deleted successfully.",
     'doc_id' : doc_id
   }  
   

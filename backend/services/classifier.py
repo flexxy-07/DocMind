@@ -100,7 +100,6 @@ def classify_document(text: str) -> dict:
   except Exception as e:
     # maybe network error, timeout, or something else went wrong with the API call
     return _fallback(f'LLM error: {str(e)}')
-    return _fallback('Unexpected error occurred')
   
   
 def _fallback(reason: str) -> dict:

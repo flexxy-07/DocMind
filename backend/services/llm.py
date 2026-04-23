@@ -3,7 +3,6 @@ from google.genai import types
 import os
 from typing import List, AsyncGenerator
 
-from typer import prompt
 from services.classifier import CATEGORY_PERSONAS
 
 _client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
@@ -91,8 +90,11 @@ def answer_question(
   question: str,
   chunks: List[dict],
   category: str = 'general',
-  conversation_history: List[dict] = [],
+  conversation_history: List[dict] | None = None,
 ) -> str:
+  if conversation_history is None:
+    conversation_history = []
+
   prompt = build_prompt(question, chunks, category, conversation_history)
   
   response = _client.models.generate_content(
@@ -100,7 +102,7 @@ def answer_question(
     contents=prompt,
     config=types.GenerateContentConfig(
       temperature=0.1,
-      response_mime_type="application/json",
+      response_mime_type="text/plain",
       max_output_tokens=1024
     )
   )
@@ -133,7 +135,7 @@ async def stream_answer(
     contents=prompt,
     config=types.GenerateContentConfig(
       temperature=0.1,
-      response_mime_type="application/json",
+      response_mime_type="text/plain",
       max_output_tokens=1024,
     )
   )
