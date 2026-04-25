@@ -56,130 +56,154 @@ class ChatNotifier extends StateNotifier<ChatState> {
   final String? _docId;
   final List<String>? _docIds;
 
-  ChatNotifier({String? docId, List<String>? docIds}): 
-  _docId = docId,
-  _docIds = docIds,
-  super(ChatState(messages: const [], isStreaming: false, sessionId: const Uuid().v4(),
-  docId: docId,
-  docIds: docIds
-  ));
+  ChatNotifier({String? docId, List<String>? docIds})
+    : _docId = docId,
+      _docIds = docIds,
+      super(
+        ChatState(
+          messages: const [],
+          isStreaming: false,
+          sessionId: const Uuid().v4(),
+          docId: docId,
+          docIds: docIds,
+        ),
+      );
 
   Future<void> sendMessage(String question) async {
-  if(question.trim().isEmpty) return;
-  if(state.isStreaming) return;
+    if (question.trim().isEmpty) return;
+    if (state.isStreaming) return;
 
-  final userMessage = ChatMessage(role: 'user', content: question.trim(), timestamp: DateTime.now());
-
-  // setting stream
-  final streamingMessage = ChatMessage(role: 'assistant', content: '', timestamp: DateTime.now(), isStreaming: true);
-
-  state = state.copyWith(
-    messages: [...state.messages, userMessage, streamingMessage],
-    isStreaming: true,
-    clearError: true
-  );
-
-  // connecting to SSE stream
-  try {
-    final stream = ApiClient().queryStream(question:question.trim(),
-    docId: _docId,
-    docIds: _docIds,
-    conversationHistory: state.historyForBackend,
+    final userMessage = ChatMessage(
+      role: 'user',
+      content: question.trim(),
+      timestamp: DateTime.now(),
     );
-    String accumulatedText = '';
-    List<SourceChunk> sourceChunks = [];
 
-    await for (final event in stream) {
-      switch (event) {
-        case TokenEvent(:final token):
-          accumulatedText += token;
-          final updated = List<ChatMessage>.from(state.messages);
-          updated[updated.length - 1] = streamingMessage.copyWith(
-            content: accumulatedText,
-            isStreaming: true,
-          );
-          state = state.copyWith(messages: updated);
-          break;
+    // setting stream
+    final streamingMessage = ChatMessage(
+      role: 'assistant',
+      content: '',
+      timestamp: DateTime.now(),
+      isStreaming: true,
+    );
 
-        case SourcesEvent(:final sources):
-          sourceChunks = sources;
-          break;
+    state = state.copyWith(
+      messages: [...state.messages, userMessage, streamingMessage],
+      isStreaming: true,
+      clearError: true,
+    );
 
-        case DoneEvent(:final category):
-          final finalMsg = streamingMessage.copyWith(
-            content: accumulatedText,
-            sources: sourceChunks,
-            isStreaming: false,
-          );
+    // connecting to SSE stream
+    try {
+      final stream = ApiClient().queryStream(
+        question: question.trim(),
+        docId: _docId,
+        docIds: _docIds,
+        conversationHistory: state.historyForBackend,
+      );
+      String accumulatedText = '';
+      List<SourceChunk> sourceChunks = [];
 
-          final finalList = List<ChatMessage>.from(state.messages);
-          finalList[finalList.length - 1] = finalMsg;
+      await for (final event in stream) {
+        switch (event) {
+          case TokenEvent(:final token):
+            accumulatedText += token;
+            final updated = List<ChatMessage>.from(state.messages);
+            updated[updated.length - 1] = streamingMessage.copyWith(
+              content: accumulatedText,
+              isStreaming: true,
+            );
+            state = state.copyWith(messages: updated);
+            break;
 
-          state = state.copyWith(
-            messages: finalList,
-            isStreaming: false,
-            category: category,
-          );
+          case SourcesEvent(:final sources):
+            sourceChunks = sources;
+            break;
 
-          // saving sessions
-          _saveSession();
-          break;
+          case DoneEvent(:final category):
+            final finalMsg = streamingMessage.copyWith(
+              content: accumulatedText,
+              sources: sourceChunks,
+              isStreaming: false,
+            );
 
-        case ErrorEvent(:final message):
-          _handleError(message);
-          break;
+            final finalList = List<ChatMessage>.from(state.messages);
+            finalList[finalList.length - 1] = finalMsg;
+
+            state = state.copyWith(
+              messages: finalList,
+              isStreaming: false,
+              category: category,
+            );
+
+            // saving sessions
+            _saveSession();
+            break;
+
+          case ErrorEvent(:final message):
+            _handleError(message);
+            break;
+        }
       }
+    } catch (e) {
+      _handleError(e.toString());
     }
-
-  } catch (e){
-    _handleError(e.toString());
   }
 
-}
-
-  void clearChat(){
-    state = ChatState(messages: const [], isStreaming: false, sessionId: const Uuid().v4(),
-    docId: _docId, docIds: _docIds,
-    category: state.category
+  void clearChat() {
+    state = ChatState(
+      messages: const [],
+      isStreaming: false,
+      sessionId: const Uuid().v4(),
+      docId: _docId,
+      docIds: _docIds,
+      category: state.category,
     );
   }
 
   // past session load
-  void loadSession(Map<String, dynamic> sessionData){
+  void loadSession(Map<String, dynamic> sessionData) {
     final rawMessages = sessionData['messages'] as List? ?? [];
 
-    final messages = rawMessages.map((msg){
+    final messages = rawMessages.map((msg) {
       final map = msg as Map<String, dynamic>;
-      return ChatMessage(role: map['role'] ?? 'user', content: map['content'] ?? '', timestamp: DateTime.tryParse(map['timestamp'] ?? '') ?? DateTime.now());
+      return ChatMessage(
+        role: map['role'] ?? 'user',
+        content: map['content'] ?? '',
+        timestamp: DateTime.tryParse(map['timestamp'] ?? '') ?? DateTime.now(),
+      );
     }).toList();
 
-    state = ChatState(messages: messages, isStreaming: false, sessionId: sessionData['session_id'] ?? const Uuid().v4(),
-    docId: _docId,
-    docIds: _docIds,
-    category: sessionData['category'] ?? 'general'
+    state = ChatState(
+      messages: messages,
+      isStreaming: false,
+      sessionId: sessionData['session_id'] ?? const Uuid().v4(),
+      docId: _docId,
+      docIds: _docIds,
+      category: sessionData['category'] ?? 'general',
     );
-
-
   }
 
-  void _handleError(String msg){
+  void _handleError(String msg) {
     final msgs = List<ChatMessage>.from(state.messages);
-    if(msgs.isNotEmpty && msgs.last.isStreaming){
+    if (msgs.isNotEmpty && msgs.last.isStreaming) {
       msgs.removeLast();
     }
 
-    state = state.copyWith(
-      messages: msgs,
-      isStreaming: false,
-      error: msg,
-    );
+    state = state.copyWith(messages: msgs, isStreaming: false, error: msg);
   }
 
   Future<void> _saveSession() async {
-    if(state.messages.isEmpty) return;
+    if (state.messages.isEmpty) return;
     try {
-      await ApiClient().saveSession(sessionId: state.sessionId, messages: state.messages.where((m) => !m.isStreaming).toList(), createdAt: DateTime.now().toIso8601String(), docId: _docId, docIds: _docIds);
-    }catch(e){
+      await ApiClient().saveSession(
+        sessionId: state.sessionId,
+        messages: state.messages.where((m) => !m.isStreaming).toList(),
+        createdAt: DateTime.now().toIso8601String(),
+        docId: _docId,
+        docIds: _docIds,
+      );
+    } catch (e) {
       print('Session was failed (non -fatal): $e');
     }
   }
@@ -189,36 +213,29 @@ class ChatParams {
   final String? docId;
   final List<String>? docIds;
 
-  const ChatParams({
-    this.docId , this.docIds
-  });
+  const ChatParams({this.docId, this.docIds});
 
   @override
-  bool operator ==(Object other) => 
-    other is ChatParams && other.docId == docId && _listEquals(other.docIds, docIds);
-
+  bool operator ==(Object other) =>
+      other is ChatParams &&
+      other.docId == docId &&
+      _listEquals(other.docIds, docIds);
 
   @override
   int get hashCode => Object.hash(docId, docIds);
 
-  bool _listEquals(List? a, List? b){
-    if(a == null && b == null) return true;
-    if(a==null || b == null) return false;
-    if(a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++){
-      if(a[i] != b[i]) return false;
+  bool _listEquals(List? a, List? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
     }
     return true;
   }
 }
 
-final chatProvider = StateNotifierProvider.autoDispose.family<ChatNotifier, ChatState, ChatParams>((ref, params) => 
- ChatNotifier(
-  docId: params.docId,
-  docIds: params.docIds,
- )
- );
-
-
-
-
+final chatProvider = StateNotifierProvider.autoDispose
+    .family<ChatNotifier, ChatState, ChatParams>(
+      (ref, params) => ChatNotifier(docId: params.docId, docIds: params.docIds),
+    );
