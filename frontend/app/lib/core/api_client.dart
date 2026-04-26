@@ -27,6 +27,14 @@ class DocRecord {
     required this.uploadedAt,
   });
 
+  DateTime get createdAt {
+    try {
+      return DateTime.parse(uploadedAt);
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
+
   factory DocRecord.fromJson(Map<String, dynamic> js) => DocRecord(
     docId: js['doc_id'] ?? '',
     filename: js['filename'] ?? '',

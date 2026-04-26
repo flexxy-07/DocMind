@@ -1,7 +1,8 @@
 import 'package:app/core/api_client.dart';
-import 'package:app/core/theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
+import '../core/design_system.dart';
+import 'obsidian_card.dart';
 
 class SourceChipRow extends StatefulWidget {
   final List<SourceChunk> sources;
@@ -14,29 +15,26 @@ class SourceChipRow extends StatefulWidget {
 
 class _SourceChipRowState extends State<SourceChipRow> {
   int _expanded = -1;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(
-              Icons.format_quote_rounded,
-              size: 12,
-              color: AppColors.textHint,
-            ),
-            SizedBox(width: 4),
+            const Icon(Icons.hub_outlined, size: 12, color: ObsidianColors.onSurfaceVariant),
+            const SizedBox(width: 4),
             Text(
-              'Sources',
-              style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+              'INTELLIGENCE SOURCES',
+              style: ObsidianTypography.labelSmall,
             ),
           ],
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 12),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: 8,
+          runSpacing: 8,
           children: List.generate(widget.sources.length, (i) {
             return _SourceChip(
               source: widget.sources[i],
@@ -50,16 +48,11 @@ class _SourceChipRowState extends State<SourceChipRow> {
         ),
         if (_expanded >= 0 && _expanded < widget.sources.length)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.only(top: 12),
             child: _ExpandedPassage(source: widget.sources[_expanded])
                 .animate()
                 .fade(duration: 200.ms)
-                .slideY(
-                  begin: -0.05,
-                  end: 0,
-                  duration: 200.ms,
-                  curve: Curves.easeOut,
-                ),
+                .slideY(begin: -0.05, end: 0),
           ),
       ],
     );
@@ -80,68 +73,43 @@ class _SourceChip extends StatelessWidget {
   });
 
   @override
-   Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     final matchPct = (source.score * 100).toInt();
- 
-    final Color chipColor;
-    if (matchPct >= 80) {
-      chipColor = AppColors.primary;
-    } else if (matchPct >= 60) {
-      chipColor = AppColors.secondary;
-    } else {
-      chipColor = AppColors.textHint;
-    }
- 
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isExpanded
-              ? chipColor.withOpacity(0.15)
-              : AppColors.bgElevated,
-          borderRadius: BorderRadius.circular(8),
+          color: isExpanded ? ObsidianColors.primary : ObsidianColors.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(ObsidianShapes.radiusXS),
           border: Border.all(
-            color: isExpanded
-                ? chipColor.withOpacity(0.5)
-                : AppColors.border,
-            width: 1,
+            color: isExpanded ? ObsidianColors.primary : ObsidianColors.border,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.article_outlined,
-              size:  11,
-              color: isExpanded ? chipColor : AppColors.textHint,
-            ),
-            const SizedBox(width: 4),
             Text(
-              source.page != null
-                  ? 'S${index + 1} · p${source.page}'
-                  : 'S${index + 1}',
-              style: TextStyle(
-                fontSize:   11,
-                fontWeight: FontWeight.w500,
-                color: isExpanded ? chipColor : AppColors.textSecond,
+              'S${index + 1}',
+              style: ObsidianTypography.technicalLabel.copyWith(
+                fontSize: 10,
+                color: isExpanded ? ObsidianColors.onPrimary : ObsidianColors.primary,
               ),
             ),
-            const SizedBox(width: 4),
-            // Match percentage badge
+            const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               decoration: BoxDecoration(
-                color:        chipColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(4),
+                color: isExpanded ? ObsidianColors.onPrimary.withOpacity(0.2) : ObsidianColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(2),
               ),
               child: Text(
                 '$matchPct%',
-                style: TextStyle(
-                  fontSize:   9,
-                  fontWeight: FontWeight.w700,
-                  color:      chipColor,
+                style: ObsidianTypography.technicalLabel.copyWith(
+                  fontSize: 9,
+                  color: isExpanded ? ObsidianColors.onPrimary : ObsidianColors.primary,
                 ),
               ),
             ),
@@ -154,61 +122,37 @@ class _SourceChip extends StatelessWidget {
 
 class _ExpandedPassage extends StatelessWidget {
   final SourceChunk source;
- 
+
   const _ExpandedPassage({required this.source});
- 
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color:        AppColors.primaryGlow,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: AppColors.primary.withOpacity(0.25),
-        ),
-      ),
+    return ObsidianCard(
+      padding: const EdgeInsets.all(16),
+      color: ObsidianColors.surfaceContainerLowest,
+      showBorder: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header — filename and page
           Row(
             children: [
-             const Icon(
-                Icons.description_outlined,
-                size:  12,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 5),
+              const Icon(Icons.description_outlined, size: 14, color: ObsidianColors.primary),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  source.page != null
-                      ? '${source.filename} · Page ${source.page}'
-                      : source.filename,
-                  style: const TextStyle(
-                    fontSize:   11,
-                    fontWeight: FontWeight.w600,
-                    color:      AppColors.primary,
-                  ),
+                  (source.page != null ? '${source.filename} · P${source.page}' : source.filename).toUpperCase(),
+                  style: ObsidianTypography.technicalLabel.copyWith(fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Divider(color: AppColors.border, height: 1),
-          const SizedBox(height: 8),
- 
-          
+          const SizedBox(height: 12),
           Text(
             source.text,
-            style: const TextStyle(
-              fontSize: 12,
-              color:    AppColors.textSecond,
-              height:   1.6,
-            ),
-            maxLines:  8,
-            overflow:  TextOverflow.ellipsis,
+            style: ObsidianTypography.bodyMedium.copyWith(height: 1.6),
+            maxLines: 8,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

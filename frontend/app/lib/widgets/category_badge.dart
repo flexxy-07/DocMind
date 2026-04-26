@@ -1,66 +1,53 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:app/core/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../core/design_system.dart';
+
 class CategoryBadge extends StatelessWidget {
   final String category;
   final bool large;
   final bool animate;
 
-
   const CategoryBadge({
-    Key? key,
+    super.key,
     required this.category,
     required this.large,
     required this.animate,
-  }) : super(key: key);
-
+  });
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     final meta = AppConstants.categoryMeta(category);
-    final color = Color(meta.color);
+    // Use categorical colors for badges but keep them technical
+    final color = Color(meta.color).withOpacity(0.8);
 
     Widget badge = Container(
       padding: EdgeInsets.symmetric(
-        horizontal: large ? 14 : 10,
-        vertical: large ? 7 : 4,
+        horizontal: large ? 12 : 8,
+        vertical: large ? 6 : 4,
       ),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(ObsidianShapes.radiusXS),
         border: Border.all(
-          color: color.withOpacity(0.35),
-          width: 1
-        )
-
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            meta.icon, style: TextStyle(
-              color: color,
-              fontSize: large ? 13 : 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2
-            ),
-          )
-        ],
+      child: Text(
+        meta.label.toUpperCase(),
+        style: ObsidianTypography.labelSmall.copyWith(
+          color: color,
+          fontSize: large ? 12 : 10,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.0,
+        ),
       ),
     );
 
-    if(animate){
-      badge = badge.animate().scale(
-        begin: const Offset(0.5, 0.5),
-        end: const Offset(1.0, 1.0),
-        duration: 400.ms,
-        curve: Curves.elasticOut
-      ).fade(duration: 200.ms);
+    if (animate) {
+      badge = badge.animate().fade(duration: 400.ms).slideX(begin: 0.1, end: 0);
     }
     return badge;
   }
-
-
-  
 }
