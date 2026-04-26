@@ -3,6 +3,7 @@ import 'package:app/core/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:app/widgets/source_chip.dart';
 
 class ChatBubble extends StatelessWidget {
   final ChatMessage message;
@@ -128,7 +129,7 @@ class _AssistantBubble extends StatelessWidget {
                       ? const _TypingDots()
                       : MarkdownBody(
                           data: message.content,
-                          styleSheet: _markddownStyle(),
+                          styleSheet: _markdownStyle(),
                           softLineBreak: true,
                         ),
                 ),
