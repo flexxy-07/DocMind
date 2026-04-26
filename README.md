@@ -29,7 +29,7 @@ Chat with your documents. Upload a PDF, image, or text file — DocMind reads it
 **Flutter app**
 - Riverpod — state management
 - Dio — HTTP + SSE streaming
-- Dark mode with glassmorphism UI
+- Dark mode with Obsidian Theme
 - Responsive layout (mobile, tablet, web)
 
 ---
