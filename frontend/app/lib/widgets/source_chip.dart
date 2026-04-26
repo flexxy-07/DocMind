@@ -1,5 +1,6 @@
 import 'package:app/core/api_client.dart';
 import 'package:app/core/theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 
 class SourceChipRow extends StatefulWidget {
@@ -40,7 +41,7 @@ class _SourceChipRowState extends State<SourceChipRow> {
             return _SourceChip(
               source: widget.sources[i],
               index: i,
-              isExanded: _expanded == i,
+              isExpanded: _expanded == i,
               onTap: () => setState(() {
                 _expanded = _expanded == i ? -1 : i;
               }),
