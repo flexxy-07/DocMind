@@ -1,4 +1,3 @@
-import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -295,7 +294,7 @@ class GradientButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isLoading;
   final double? width;
- 
+
   const GradientButton({
     super.key,
     required this.label,
@@ -304,7 +303,7 @@ class GradientButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
   });
- 
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -325,7 +324,7 @@ class GradientButton extends StatelessWidget {
                     color: AppColors.primary.withOpacity(0.4),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -335,7 +334,8 @@ class GradientButton extends StatelessWidget {
           children: [
             if (isLoading)
               const SizedBox(
-                width: 16, height: 16,
+                width: 16,
+                height: 16,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,

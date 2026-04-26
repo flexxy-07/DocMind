@@ -1,8 +1,25 @@
+import 'package:flutter/foundation.dart';
+
 class AppConstants {
-  static const String baseUrl = String.fromEnvironment(
+  static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: '',
   );
+
+  static String get baseUrl {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+
+    if (kIsWeb) return 'http://localhost:8000';
+
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return 'http://10.0.2.2:8000';
+      case TargetPlatform.iOS:
+        return 'http://127.0.0.1:8000';
+      default:
+        return 'http://localhost:8000';
+    }
+  }
 
   static String get ingestUrl   => '$baseUrl/ingest';
   static String get queryUrl    => '$baseUrl/query';

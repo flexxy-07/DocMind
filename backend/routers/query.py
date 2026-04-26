@@ -98,7 +98,7 @@ async def query(req: QueryRequest):
       answer=answer,
       sources=[],
       doc_category=category,
-      model_used='gemini-2.5-flash',
+      model_used='gemini-2.5-flash-lite',
     )
   
   answer = answer_question(
@@ -112,7 +112,7 @@ async def query(req: QueryRequest):
     answer=answer,
     sources=_format_sources(raw_chunks),
     doc_category=category,
-    model_used='gemini-2.5-flash',
+    model_used='gemini-2.5-flash-lite',
   )
   
   
@@ -156,13 +156,13 @@ async def query_stream(req: QueryRequest):
         yield f"data: {event}\n\n"
       
       event = json.dumps({
-        'type': 'end',
+        'type': 'sources',
         'content': sources_payload
       })
       yield f"data: {event}\n\n"
       
       event = json.dumps({
-        'type' : 'metadata',
+        'type' : 'done',
         'category' : category,
       })
       yield f"data: {event}\n\n"
@@ -229,5 +229,5 @@ async def query_multi(req: QueryRequest):
      'sources_by_doc': sources_by_doc,
      'doc_count': len(sources_by_doc),
      'total_chunks': len(raw_chunks),
-     'model_used': 'gemini-2.5-flash',
+     'model_used': 'gemini-2.5-flash-lite',
    }

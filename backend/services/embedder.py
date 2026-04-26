@@ -29,7 +29,7 @@ def get_model() -> SentenceTransformer:
         # After that it's cached locally in ~/.cache/huggingface/
         _model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
  
-        print("Embedding model ready ✓")
+        print("Embedding model ready [OK]")
  
     return _model
  

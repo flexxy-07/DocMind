@@ -5,7 +5,7 @@ import json
 from typing import Literal
 
 _client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-_model_name = 'gemini-2.5-flash'
+_model_name = 'gemini-2.5-flash-lite'
 
 VALID_CATEGORIES = [
   "legal",

@@ -76,9 +76,9 @@ def _ensure_collection(client:QdrantClient):
       collection_name=COLLECTION,
       vectors_config=VectorParams(size=VECTOR_DIM, distance=Distance.COSINE)
     )
-    print(f"Created Qdrant collection: '{COLLECTION}'✓")
+    print(f"Created Qdrant collection: '{COLLECTION}' [OK]")
   else:
-    print(f"Qdrant collection '{COLLECTION}' already exists✓")
+    print(f"Qdrant collection '{COLLECTION}' already exists [OK]")
     
 
 # stroing the chunks in Qdrant
@@ -126,11 +126,22 @@ def upsert_chunks(chunks: List[dict], embeddings: List[List[float]]) -> int:
                 },
             )
         )
-  # upsert sends all points in one batch ,faster than one by one
-  client.upsert(
-    collection_name=COLLECTION,
-    points=points
-  )
+  # upsert sends all points in one batch, faster than one by one.
+  # We add a retry loop to handle sporadic network/DNS issues on Windows.
+  max_retries = 3
+  for attempt in range(max_retries):
+    try:
+      client.upsert(
+        collection_name=COLLECTION,
+        points=points
+      )
+      break
+    except Exception as e:
+      if attempt < max_retries - 1:
+        print(f"Qdrant upsert failed, retrying in 2s (Attempt {attempt+1}/{max_retries}): {e}")
+        time.sleep(2)
+      else:
+        raise e
   return len(points)
 
 
@@ -227,7 +238,7 @@ def delete_doc_chunks(doc_id: str) -> str:
       ]
     )
   )
-  print(f"Deleted chunks with doc_id '{doc_id}' from Qdrant✓")
+  print(f"Deleted chunks with doc_id '{doc_id}' from Qdrant [OK]")
 
 def get_collection_info() -> dict:
   """

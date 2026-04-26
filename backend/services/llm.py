@@ -6,7 +6,7 @@ from typing import List, AsyncGenerator
 from services.classifier import CATEGORY_PERSONAS
 
 _client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
-_model_name = 'gemini-2.5-flash'
+_model_name = 'gemini-2.5-flash-lite'
 
 
 def build_prompt(
@@ -159,12 +159,31 @@ def answer_image_doc(
     
   """
   import PIL.Image
+  from PIL import UnidentifiedImageError
+  import fitz
   import io
   
   persona = CATEGORY_PERSONAS.get(category, CATEGORY_PERSONAS['general'])
   
-  # open image as PIL image, gemini accepts the PIL images
-  img = PIL.Image.open(io.BytesIO(image_bytes))
+  def _images_from_pdf(pdf_bytes: bytes, max_pages: int = 4):
+    doc = fitz.open(stream=pdf_bytes, filetype='pdf')
+    images = []
+    for i in range(min(len(doc), max_pages)):
+      page = doc.load_page(i)
+      pix = page.get_pixmap(dpi=200)
+      img_bytes = pix.tobytes('png')
+      images.append(PIL.Image.open(io.BytesIO(img_bytes)))
+    doc.close()
+    return images
+
+  # open image as PIL image (or render pages if it's an image-only PDF)
+  try:
+    images = [PIL.Image.open(io.BytesIO(image_bytes))]
+  except UnidentifiedImageError:
+    images = _images_from_pdf(image_bytes)
+
+  if not images:
+    raise ValueError('No image pages could be extracted from the document.')
   
   prompt = (
     f"{persona}\n\n"
@@ -175,7 +194,7 @@ def answer_image_doc(
         f"If the answer is not visible in the image, say so clearly."
   )
   
-  response = _client.models.generate_content([prompt, img], model=_model_name)
+  response = _client.models.generate_content([prompt, *images], model=_model_name)
   
   return response.text.strip()
   

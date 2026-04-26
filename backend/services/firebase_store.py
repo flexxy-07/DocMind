@@ -4,6 +4,7 @@ import cloudinary
 import cloudinary.uploader
 import os
 import json
+import re
 from typing import Optional, List
 
 
@@ -21,6 +22,14 @@ def _init_firebase():
     if _firebase_initialised:
         return
 
+    # If the default app already exists (e.g., reload), skip initialization.
+    try:
+        firebase_admin.get_app()
+        _firebase_initialised = True
+        return
+    except ValueError:
+        pass
+
     # Try loading from JSON string (convenient for platforms like Render/Heroku)
     cred_json_str = os.getenv("FIREBASE_CREDENTIALS_JSON")
     if cred_json_str:
@@ -35,7 +44,7 @@ def _init_firebase():
     firebase_admin.initialize_app(cred)
 
     _firebase_initialised = True
-    print("Firebase (Firestore) initialised ✓")
+    print("Firebase (Firestore) initialised [OK]")
 
 
 def _init_cloudinary():
@@ -50,7 +59,7 @@ def _init_cloudinary():
         api_secret=os.getenv("CLOUDINARY_API_SECRET"),
         secure=True,  # always use HTTPS URLs
     )
-    print("Cloudinary initialised ✓")
+    print("Cloudinary initialised [OK]")
 
 
 # FILE STORAGE — Cloudinary
@@ -88,7 +97,10 @@ def upload_file(file_bytes: bytes, filename: str, doc_id: str) -> str:
 
     # public_id is the file's name inside Cloudinary (without extension)
     # We use doc_id as the folder so files are organised per document
-    public_id = f"docmind/{doc_id}/{os.path.splitext(filename)[0]}"
+    # Cloudinary public_ids cannot contain spaces or special characters like &, ?, #
+    base_name = os.path.splitext(filename)[0]
+    safe_name = re.sub(r'[^a-zA-Z0-9\-_]', '_', base_name)
+    public_id = f"docmind/{doc_id}/{safe_name}"
 
     # Upload from bytes — wrap in BytesIO so Cloudinary can read it
     result = cloudinary.uploader.upload(

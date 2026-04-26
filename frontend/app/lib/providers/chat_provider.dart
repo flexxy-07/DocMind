@@ -9,6 +9,7 @@ class ChatState {
   final String sessionId;
   final String? docId;
   final List<String>? docIds;
+  final bool isImageDoc;
   final String category;
 
   const ChatState({
@@ -18,6 +19,7 @@ class ChatState {
     this.error,
     this.docId,
     this.docIds,
+    this.isImageDoc = false,
     this.category = 'general',
   });
 
@@ -35,6 +37,7 @@ class ChatState {
       sessionId: sessionId,
       docId: docId,
       docIds: docIds,
+      isImageDoc: isImageDoc,
       category: category ?? this.category,
     );
   }
@@ -55,10 +58,12 @@ class ChatState {
 class ChatNotifier extends StateNotifier<ChatState> {
   final String? _docId;
   final List<String>? _docIds;
+  final bool _isImageDoc;
 
-  ChatNotifier({String? docId, List<String>? docIds})
+  ChatNotifier({String? docId, List<String>? docIds, bool isImageDoc = false})
     : _docId = docId,
       _docIds = docIds,
+      _isImageDoc = isImageDoc,
       super(
         ChatState(
           messages: const [],
@@ -66,6 +71,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
           sessionId: const Uuid().v4(),
           docId: docId,
           docIds: docIds,
+          isImageDoc: isImageDoc,
         ),
       );
 
@@ -92,6 +98,43 @@ class ChatNotifier extends StateNotifier<ChatState> {
       isStreaming: true,
       clearError: true,
     );
+
+    if (_isImageDoc) {
+      try {
+        final res = await ApiClient().query(
+          question: question.trim(),
+          docId: _docId,
+          conversationHistory: state.historyForBackend,
+        );
+
+        final rawSources = res['sources'] as List? ?? [];
+        final sources = rawSources
+            .map((s) => SourceChunk.fromJson(s as Map<String, dynamic>))
+            .toList();
+        final answer = res['answer'] as String? ?? '';
+        final category = res['doc_category'] as String? ?? state.category;
+
+        final finalMsg = streamingMessage.copyWith(
+          content: answer,
+          sources: sources,
+          isStreaming: false,
+        );
+
+        final finalList = List<ChatMessage>.from(state.messages);
+        finalList[finalList.length - 1] = finalMsg;
+
+        state = state.copyWith(
+          messages: finalList,
+          isStreaming: false,
+          category: category,
+        );
+
+        _saveSession();
+      } catch (e) {
+        _handleError(e.toString());
+      }
+      return;
+    }
 
     // connecting to SSE stream
     try {
@@ -212,17 +255,19 @@ class ChatNotifier extends StateNotifier<ChatState> {
 class ChatParams {
   final String? docId;
   final List<String>? docIds;
+  final bool isImageDoc;
 
-  const ChatParams({this.docId, this.docIds});
+  const ChatParams({this.docId, this.docIds, this.isImageDoc = false});
 
   @override
   bool operator ==(Object other) =>
       other is ChatParams &&
       other.docId == docId &&
-      _listEquals(other.docIds, docIds);
+        other.isImageDoc == isImageDoc &&
+        _listEquals(other.docIds, docIds);
 
   @override
-  int get hashCode => Object.hash(docId, docIds);
+      int get hashCode => Object.hash(docId, docIds, isImageDoc);
 
   bool _listEquals(List? a, List? b) {
     if (a == null && b == null) return true;
@@ -237,5 +282,9 @@ class ChatParams {
 
 final chatProvider = StateNotifierProvider.autoDispose
     .family<ChatNotifier, ChatState, ChatParams>(
-      (ref, params) => ChatNotifier(docId: params.docId, docIds: params.docIds),
+      (ref, params) => ChatNotifier(
+        docId: params.docId,
+        docIds: params.docIds,
+        isImageDoc: params.isImageDoc,
+      ),
     );

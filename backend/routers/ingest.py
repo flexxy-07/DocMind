@@ -123,7 +123,7 @@ async def ingest_document(file: UploadFile = File(...)):
     }
     
     save_doc_record(record)
-    print("Saved document record to Firestore ✓")
+    print("Saved document record to Firestore [OK]")
     print(f"{'='*50}\n")
     
     # Return response to frontend

@@ -57,4 +57,4 @@ async def startup():
     # preload the model so first requrest is not slow
     from services.embedder import get_model
     get_model()
-    print("DocMind API is ready ✓")
+    print("DocMind API is ready [OK]")
