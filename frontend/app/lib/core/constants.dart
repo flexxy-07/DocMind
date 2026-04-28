@@ -9,6 +9,11 @@ class AppConstants {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
 
+    // TODO: Replace with your actual Render URL after deployment
+    const String prodUrl = 'https://docmind-api.onrender.com';
+    
+    if (!kDebugMode) return prodUrl;
+
     if (kIsWeb) return 'http://localhost:8000';
 
     switch (defaultTargetPlatform) {

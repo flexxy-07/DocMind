@@ -63,8 +63,8 @@ def _extract_page_number(text: str) -> int | None:
     Looks for the [Page N] or [Page N - OCR] markers we added in parser.py.
  
     re.search scans through the string looking for the pattern.
-    r"\[Page (\d+)" means:
-        \[      → literal [
+    r"\\[Page (\d+)" means:
+        \\[      → literal [
         Page    → literal "Page "
         (\d+)   → capture one or more digits (the page number)
  
