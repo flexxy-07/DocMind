@@ -73,7 +73,7 @@ def _format_sources(raw_chunks: list) -> list[SourceChunk]:
 # POST /query -> returns the full answer at once, not streaming
 
 
-@router.post("/", response_model=QueryResponse)
+@router.post("", response_model=QueryResponse)
 async def query(req: QueryRequest):
   raw_chunks, category, is_image_doc, doc_record = await _retrieve(req)
 

@@ -23,7 +23,7 @@ MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024  # 20MB limit
 ALLOWED_EXTENSIONS = {'.pdf', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff', '.txt', '.md'}
 
 # POST
-@router.post("/", response_model=IngestResponse)
+@router.post("", response_model=IngestResponse)
 async def ingest_document(file: UploadFile = File(...)):
   """
     Full document ingestion pipeline.
