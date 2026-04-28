@@ -66,12 +66,16 @@ class _GlassInputState extends State<GlassInput> {
           ),
         ),
         // Focus indicator (The "Engraved" line)
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          height: 2,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: _isFocused ? double.infinity : 0,
-          color: ObsidianColors.primary,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: _isFocused ? constraints.maxWidth : 0,
+              color: ObsidianColors.primary,
+            );
+          },
         ),
       ],
     );

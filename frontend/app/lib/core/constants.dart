@@ -11,6 +11,10 @@ class AppConstants {
 
     const String prodUrl = 'https://docmind-tiux.onrender.com';
     
+    // Force the app to use the Render URL even when debugging
+    return prodUrl;
+
+    /*
     if (!kDebugMode) return prodUrl;
 
     if (kIsWeb) return 'http://localhost:8000';
@@ -23,6 +27,7 @@ class AppConstants {
       default:
         return 'http://localhost:8000';
     }
+    */
   }
 
   static String get ingestUrl   => '$baseUrl/ingest';

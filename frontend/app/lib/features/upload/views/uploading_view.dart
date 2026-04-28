@@ -10,10 +10,12 @@ class UploadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Machined Processing Indicator
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Machined Processing Indicator
         Stack(
           alignment: Alignment.center,
           children: [
@@ -63,13 +65,14 @@ class UploadingView extends StatelessWidget {
         Text(
           state.progress < 1.0
               ? 'TRANSFERRING DATA TO ARCHIVE'
-              : 'ANALYZING DOCUMENT INTELLIGENCE',
+              : 'DECODING',
           style: ObsidianTypography.labelSmall.copyWith(
             letterSpacing: 1.0,
           ),
           textAlign: TextAlign.center,
         ),
       ],
-    ).animate().fade();
+    ).animate().fade(),
+    );
   }
 }
