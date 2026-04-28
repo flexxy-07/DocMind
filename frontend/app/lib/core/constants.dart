@@ -9,8 +9,7 @@ class AppConstants {
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
 
-    // TODO: Replace with your actual Render URL after deployment
-    const String prodUrl = 'https://docmind-api.onrender.com';
+    const String prodUrl = 'https://docmind-tiux.onrender.com';
     
     if (!kDebugMode) return prodUrl;
 
