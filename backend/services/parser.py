@@ -1,14 +1,25 @@
 import fitz
 import pytesseract
 import os
+import shutil
 
-# Configure Tesseract path conditionally for Windows vs. Linux (Render)
-if os.name == 'nt':
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Make Tesseract Path 100% Environment Agnostic
+tesseract_env = os.getenv("TESSERACT_CMD")
+
+if tesseract_env and os.path.exists(tesseract_env):
+    # 1. Use explicitly set Environment Variable
+    pytesseract.pytesseract.tesseract_cmd = tesseract_env
+elif shutil.which("tesseract"):
+    # 2. Use system PATH if available (Works natively on Linux/Render and configured Windows machines)
+    pytesseract.pytesseract.tesseract_cmd = shutil.which("tesseract")
+elif os.name == 'nt':
+    # 3. Fallback for unconfigured local Windows environments
+    fallback_win = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    if os.path.exists(fallback_win):
+        pytesseract.pytesseract.tesseract_cmd = fallback_win
 
 from PIL import Image
 import io
-import os
 from typing import Tuple
 
 
