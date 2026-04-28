@@ -100,6 +100,8 @@ def extract_text_from_image(file_bytes : bytes) -> Tuple[str, int, bool]:
   img = Image.open(io.BytesIO(file_bytes))
   text = pytesseract.image_to_string(img).strip()
   
+  if not text:
+      text = "Image document with no discernible text."
   
   # page_count = 1 
   # is_image_doc is always true in case of plain imagers

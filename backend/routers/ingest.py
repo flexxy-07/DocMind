@@ -41,7 +41,7 @@ async def ingest_document(file: UploadFile = File(...)):
     # 400 = Bad Request -> Client sent something wrong
     raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
   
-    # await is needed because reading the file is an async operation
+  # await is needed because reading the file is an async operation
   file_bytes = await file.read()
   
   if len(file_bytes) > MAX_FILE_SIZE_BYTES:
@@ -70,7 +70,7 @@ async def ingest_document(file: UploadFile = File(...)):
     print(f"Error during parsing: {e}")
     raise HTTPException(status_code=500, detail=f"failed to parse document: {str(e)}")
   
-  if not text.strip():
+  if not text.strip() and not is_image_doc:
     raise HTTPException(status_code=400, detail="No text could be extracted from the document...If its a scanned image, ensure its clear and readable.")
   
   print(f"Parsed: {page_count} page(s) | Image doc: {is_image_doc} | Text length: {len(text)} chars")
