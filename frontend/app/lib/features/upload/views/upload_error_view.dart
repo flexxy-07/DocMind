@@ -11,10 +11,12 @@ class UploadErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
           Icons.warning_amber_rounded,
           color: ObsidianColors.accent,
           size: 64,
@@ -46,6 +48,7 @@ class UploadErrorView extends StatelessWidget {
           width: 200,
         ),
       ],
-    ).animate().fade();
+    ).animate().fade(),
+    );
   }
 }

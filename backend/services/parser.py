@@ -1,8 +1,10 @@
 import fitz
 import pytesseract
+import os
 
-# Configure Tesseract path for Windows
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Configure Tesseract path conditionally for Windows vs. Linux (Render)
+if os.name == 'nt':
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 from PIL import Image
 import io
